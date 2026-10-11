@@ -1,0 +1,218 @@
+/* Interactive layer: cursor, marquee, tech sphere, terminal, scroll progress.
+   Plain CSS (outside the tailwind layers) so it always wins over component defaults. */
+
+/* ---------- scroll progress ---------- */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 90;
+  pointer-events: none;
+}
+.scroll-progress > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #fff3d6);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ---------- cursor ---------- */
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 300;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.has-cursor .cursor-ring,
+.has-cursor .cursor-dot { opacity: 1; }
+.cursor-ring {
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border: 1px solid rgb(255 255 255 / 0.55);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  mix-blend-mode: difference;
+  transition: opacity 0.25s, width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), margin 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s;
+}
+.cursor-ring.is-hot {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  background: rgb(255 255 255 / 0.12);
+}
+.cursor-ring.has-label {
+  width: 84px;
+  height: 84px;
+  margin: -42px 0 0 -42px;
+}
+.cursor-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+.cursor-ripple {
+  position: fixed;
+  z-index: 299;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-accent);
+  pointer-events: none;
+}
+
+/* ---------- marquee ---------- */
+.marquee {
+  position: relative;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  overflow: hidden;
+  border-block: 1px solid var(--color-line);
+  background: rgb(11 11 12 / 0.55);
+}
+.marquee-row { overflow: hidden; }
+.marquee-row + .marquee-row { margin-top: 0.4rem; }
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding-right: clamp(1.25rem, 3vw, 2.5rem);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 6.5vw, 5.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: var(--color-fg);
+}
+.marquee-row.is-alt .marquee-item {
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(236 233 226 / 0.55);
+}
+.marquee-dot {
+  width: 0.28em;
+  height: 0.28em;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+/* ---------- tech sphere ---------- */
+.tech-sphere-wrap { margin-top: 3.5rem; }
+.tech-sphere {
+  position: relative;
+  width: min(100%, 36rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgb(232 176 74 / 0.08), transparent 62%);
+}
+.tech-sphere.is-drag { cursor: grabbing; }
+.sphere-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: var(--color-fg);
+  will-change: transform, opacity;
+  transition: color 0.2s;
+}
+.sphere-word.is-front { color: var(--color-accent); }
+
+/* ---------- terminal ---------- */
+.terminal {
+  border: 1px solid var(--color-line-strong);
+  border-radius: 14px;
+  background: rgb(8 8 9 / 0.82);
+  overflow: hidden;
+  font-family: Consolas, 'Courier New', ui-monospace, monospace;
+  font-size: 0.875rem;
+  box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.9);
+}
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--color-line);
+}
+.terminal-bar i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+}
+.terminal-bar i:nth-child(1) { background: #ff5f57; }
+.terminal-bar i:nth-child(2) { background: #febc2e; }
+.terminal-bar i:nth-child(3) { background: #28c840; }
+.terminal-log {
+  height: 16rem;
+  overflow-y: auto;
+  padding: 1rem 1rem 0.25rem;
+  overscroll-behavior: contain;
+}
+.terminal-log p {
+  margin: 0 0 0.15rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  color: rgb(236 233 226 / 0.85);
+}
+.terminal-log .t-in { color: var(--color-fg); }
+.terminal-log .t-accent { color: var(--color-accent); }
+.t-prompt { color: var(--color-accent); }
+.terminal-form {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem 0.8rem;
+}
+.terminal-form input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--color-fg);
+  font: inherit;
+  caret-color: var(--color-accent);
+}
+.terminal-form input::placeholder { color: rgb(236 233 226 / 0.3); }
+.terminal:focus-within { border-color: var(--color-accent); }
+.terminal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+.terminal-chips .chip {
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
