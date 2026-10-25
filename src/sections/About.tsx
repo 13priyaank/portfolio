@@ -5,55 +5,64 @@ export function About() {
   const [lead, ...rest] = about.paragraphs
 
   return (
-    <section id="about" className="section" aria-labelledby="about-title">
-      <div className="wrap">
-        <SectionHead index="01" label="About" title="From the browser down to the database." id="about-title" />
+    <section id="about" className="section side-right" aria-labelledby="about-title">
+      <div className="col">
+        <SectionHead index="01" label="About" title="From pixels down to Postgres." accent="Postgres" id="about-title" />
 
-        <div className="about-grid">
-          <div className="about-copy">
-            <p className="about-lead" data-reveal>
-              {lead}
+        <div data-reveal-group>
+          <p className="lead" data-reveal>
+            {lead}
+          </p>
+          {rest.map((p) => (
+            <p className="body" key={p.slice(0, 20)} data-reveal>
+              {p}
             </p>
-            {rest.map((p) => (
-              <p key={p.slice(0, 24)} data-reveal>
-                {p}
-              </p>
-            ))}
+          ))}
+        </div>
+
+        <div className="stat-row" data-reveal-group>
+          <div className="glass stat" data-reveal data-sfx>
+            <span className="stat-num">
+              <span data-count="2024" data-from="2000">
+                2024
+              </span>
+            </span>
+            <span className="mono">Building for the web since</span>
           </div>
+          <div className="glass stat" data-reveal data-sfx>
+            <span className="stat-num">
+              10→
+              <span className="grad" data-count="2" data-from="10">
+                2
+              </span>
+            </span>
+            <span className="mono">Days to deliver, after automation</span>
+          </div>
+          <div className="glass stat" data-reveal data-sfx>
+            <span className="stat-num">
+              <span data-count="6" data-from="0">
+                6
+              </span>
+            </span>
+            <span className="mono">Projects across health, AI and 3D</span>
+          </div>
+        </div>
 
-          <aside className="about-side" aria-label="Quick facts">
-            <dl className="stats" data-reveal>
-              {about.highlights.map((h) => (
-                <div key={h.label}>
-                  <dt className="mono">{h.label}</dt>
-                  <dd>{h.value}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <div className="edu" data-reveal>
-              <h3 className="mono small-title">Education</h3>
-              <ul>
-                {education.map((e) => (
-                  <li key={e.title}>
-                    <strong>{e.title}</strong>
-                    <span>
-                      {e.place} · {e.period}
-                    </span>
-                    <span className="tag">{e.score}</span>
-                  </li>
-                ))}
-              </ul>
-              <h3 className="mono small-title">Certification</h3>
-              <ul>
-                {certifications.map((c) => (
-                  <li key={c.title}>
-                    <strong>{c.title}</strong>
-                  </li>
-                ))}
-              </ul>
+        <div className="edu" data-reveal-group>
+          {education.map((e) => (
+            <div className="glass edu-card" key={e.title} data-reveal data-sfx>
+              <span className="mono">{e.period}</span>
+              <strong>{e.title}</strong>
+              <span>{e.place}</span>
+              <span className="pill">{e.score}</span>
             </div>
-          </aside>
+          ))}
+          {certifications.map((c) => (
+            <div className="glass edu-card" key={c.title} data-reveal data-sfx>
+              <span className="mono">Certification</span>
+              <strong>{c.title}</strong>
+            </div>
+          ))}
         </div>
       </div>
     </section>

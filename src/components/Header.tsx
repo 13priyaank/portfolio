@@ -1,23 +1,21 @@
 import { useEffect, useState } from 'react'
 import { nav, profile } from '../data/profile'
+import { getLenis, scrollToId } from '../lib/motion'
+import { sound } from '../lib/sound'
 
 export function Header() {
   const [open, setOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [soundOn, setSoundOn] = useState(sound.enabled)
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  useEffect(() => sound.subscribe(setSoundOn), [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('menu-open', open)
+    if (open) getLenis()?.stop()
+    else if (!document.documentElement.classList.contains('is-locked')) getLenis()?.start()
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    // close the sheet if the viewport grows past the mobile breakpoint
-    const mq = window.matchMedia('(min-width: 860px)')
+    const mq = window.matchMedia('(min-width: 900px)')
     const onMq = () => mq.matches && setOpen(false)
     window.addEventListener('keydown', onKey)
     mq.addEventListener('change', onMq)
@@ -27,29 +25,50 @@ export function Header() {
     }
   }, [open])
 
+  const go = (id: string) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    setOpen(false)
+    // wait a frame so the menu's scroll lock is released first
+    requestAnimationFrame(() => scrollToId(id))
+  }
+
   return (
     <>
-      <header className={`site-header${scrolled ? ' is-scrolled' : ''}${open ? ' is-open' : ''}`}>
-        <div className="wrap header-row">
-          <a href="#top" className="brand" aria-label={`${profile.name}, back to top`} onClick={() => setOpen(false)}>
-            <span className="brand-mark" aria-hidden="true">
-              pw
+      <header className={`site-header${open ? ' is-open' : ''}`}>
+        <a href="#top" className="brand" onClick={go('top')} aria-label={`${profile.name}, back to top`}>
+          <span className="brand-orb" aria-hidden="true" />
+          <span className="brand-text">
+            Priyank<b>.</b>
+          </span>
+        </a>
+
+        <nav className="nav-desktop" aria-label="Primary">
+          {nav.map((n, i) => (
+            <a key={n.id} href={`#${n.id}`} onClick={go(n.id)}>
+              <span className="mono">0{i + 1}</span>
+              {n.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="header-actions">
+          <button
+            type="button"
+            className={`sound-btn${soundOn ? ' is-on' : ''}`}
+            onClick={() => sound.toggle()}
+            aria-pressed={soundOn}
+          >
+            <span className="eq" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
             </span>
-            <span className="brand-name">{profile.name}</span>
+            <span className="sound-label">{soundOn ? 'Sound on' : 'Sound off'}</span>
+          </button>
+          <a href={profile.resume} className="btn btn-glow header-cta" download>
+            Résumé
           </a>
-
-          <nav className="nav-desktop" aria-label="Primary">
-            {nav.map((n) => (
-              <a key={n.id} href={`#${n.id}`}>
-                {n.label}
-              </a>
-            ))}
-          </nav>
-
-          <a href={profile.resume} className="btn btn-small header-cta" download>
-            Résumé <span aria-hidden="true">↓</span>
-          </a>
-
           <button
             type="button"
             className="menu-btn"
@@ -63,13 +82,13 @@ export function Header() {
         </div>
       </header>
 
-      {/* sibling of the header: its backdrop-filter would otherwise trap this fixed sheet */}
-      <nav id="mobile-nav" className="nav-mobile" aria-label="Mobile" hidden={!open}>
+      {/* a sibling of the header: its backdrop-filter would trap this fixed sheet */}
+      <nav id="mobile-nav" className={`nav-mobile${open ? ' is-open' : ''}`} aria-label="Mobile" hidden={!open}>
         <ol>
           {nav.map((n, i) => (
-            <li key={n.id}>
-              <a href={`#${n.id}`} onClick={() => setOpen(false)}>
-                <span className="mono">{String(i + 1).padStart(2, '0')}</span>
+            <li key={n.id} style={{ transitionDelay: `${0.05 + i * 0.05}s` }}>
+              <a href={`#${n.id}`} onClick={go(n.id)}>
+                <span className="mono">0{i + 1}</span>
                 {n.label}
               </a>
             </li>
@@ -77,8 +96,8 @@ export function Header() {
         </ol>
         <div className="nav-mobile-foot">
           <a href={`mailto:${profile.email}`}>{profile.email}</a>
-          <a href={profile.resume} className="btn" download>
-            Download résumé <span aria-hidden="true">↓</span>
+          <a href={profile.resume} className="btn btn-glow" download>
+            Download résumé
           </a>
         </div>
       </nav>
