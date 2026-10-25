@@ -137,13 +137,12 @@ GitHub Pages serves the site from `https://<username>.github.io/<repo>/`, so the
 ## 4. After it's live
 
 1. **Fix the social-share links.** In `index.html`, change `og:image`, `twitter:image` and the JSON-LD `image` from relative paths (`/og.png`) to absolute URLs (`https://your-site.vercel.app/og.png`). Without this, LinkedIn and WhatsApp previews may show no image. Commit and push.
-2. **Refresh the share image.** `public/og.png` is the 1200×630 card used for link previews. It still shows the old dark design, so it needs regenerating to match the new look.
-3. **Test the checklist:**
+2. **Test the checklist:**
    - Open the URL on your phone and on desktop.
    - Click the résumé download.
    - Check the email, LinkedIn and GitHub links.
    - Paste the link into LinkedIn or WhatsApp and look at the preview.
-4. **Custom domain (optional, not free).** All hosts above let you attach a domain you buy (about ₹700–1000/year) under their **Domains** settings. They give you the DNS records to add and provide HTTPS for free.
+3. **Custom domain (optional, not free).** All hosts above let you attach a domain you buy (about ₹700–1000/year) under their **Domains** settings. They give you the DNS records to add and provide HTTPS for free.
 
 ---
 

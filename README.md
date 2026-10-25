@@ -18,7 +18,7 @@ Step-by-step free hosting guide (Vercel, Netlify, Cloudflare Pages, GitHub Pages
 
 ## Before you deploy
 - `public/Priyank_Wadiwala_Resume.pdf` is the résumé the site serves. Replace it if you update your résumé.
-- Set absolute URLs for `og:image` / `twitter:image` in `index.html` once you have a domain, and regenerate `public/og.png` (it still shows the old photo and font).
+- Set absolute URLs for `og:image` / `twitter:image` in `index.html` once you have a domain. `public/og.png` is the 1200×630 link-preview card and matches the current design.
 - No project has a public repo or live demo link, so none are shown. Add a `links` field and render it in `src/sections/Projects.tsx` when you have them.
 
 ## Design notes
