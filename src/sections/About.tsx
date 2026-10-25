@@ -1,43 +1,59 @@
-import { about } from '../data/profile'
+import { about, certifications, education } from '../data/profile'
 import { SectionHead } from '../components/SectionHead'
 
 export function About() {
+  const [lead, ...rest] = about.paragraphs
+
   return (
     <section id="about" className="section" aria-labelledby="about-title">
-      <div className="shell grid grid-cols-12 items-start gap-x-0 gap-y-16 md:gap-x-8">
-        <div className="col-span-12 md:col-span-5 lg:col-span-4">
-          <div data-reveal>
-            <div className="about-frame" data-parallax="-40">
-            <img
-              src="/images/priyank-avatar.webp"
-              width={640}
-              height={854}
-              loading="lazy"
-              alt="Illustrated portrait of Priyank Wadiwala with yellow glasses and a circuit-pattern shirt"
-            />
-            </div>
-          </div>
-          <p data-reveal className="mono-label mt-5">Illustrated self-portrait</p>
-        </div>
+      <div className="wrap">
+        <SectionHead index="01" label="About" title="From the browser down to the database." id="about-title" />
 
-        <div className="col-span-12 md:col-span-7 lg:col-span-7 lg:col-start-6">
-          <SectionHead id="about" index="01" label="About" title="Backend depth, *frontend* instinct." />
-          <div className="mt-10 space-y-5 text-[1.0625rem] leading-relaxed text-mute md:max-w-xl">
-            {about.paragraphs.map((p, i) => (
-              <p key={i} data-reveal className={i === 0 ? 'text-fg' : undefined}>
+        <div className="about-grid">
+          <div className="about-copy">
+            <p className="about-lead" data-reveal>
+              {lead}
+            </p>
+            {rest.map((p) => (
+              <p key={p.slice(0, 24)} data-reveal>
                 {p}
               </p>
             ))}
           </div>
 
-          <dl className="mt-14 grid grid-cols-1 gap-y-6 border-t border-line pt-8 sm:grid-cols-3 sm:gap-x-8">
-            {about.highlights.map((h) => (
-              <div key={h.label} data-reveal>
-                <dd className="display text-4xl text-fg">{h.value}</dd>
-                <dt className="mono-label mt-2 !normal-case !tracking-normal">{h.label}</dt>
-              </div>
-            ))}
-          </dl>
+          <aside className="about-side" aria-label="Quick facts">
+            <dl className="stats" data-reveal>
+              {about.highlights.map((h) => (
+                <div key={h.label}>
+                  <dt className="mono">{h.label}</dt>
+                  <dd>{h.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="edu" data-reveal>
+              <h3 className="mono small-title">Education</h3>
+              <ul>
+                {education.map((e) => (
+                  <li key={e.title}>
+                    <strong>{e.title}</strong>
+                    <span>
+                      {e.place} · {e.period}
+                    </span>
+                    <span className="tag">{e.score}</span>
+                  </li>
+                ))}
+              </ul>
+              <h3 className="mono small-title">Certification</h3>
+              <ul>
+                {certifications.map((c) => (
+                  <li key={c.title}>
+                    <strong>{c.title}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
         </div>
       </div>
     </section>

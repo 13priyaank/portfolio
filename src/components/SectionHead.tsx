@@ -1,19 +1,17 @@
-import { SplitText } from './SplitText'
+type Props = { index: string; label: string; title: string; count?: number; id: string }
 
-type Props = { id: string; index: string; label: string; title: string; className?: string }
-
-export function SectionHead({ id, index, label, title, className = '' }: Props) {
+/** Hairline rule, numbered mono label, then the section title. */
+export function SectionHead({ index, label, title, count, id }: Props) {
   return (
-    <header className={className}>
-      <p data-reveal className="mono-label mb-6 flex items-center gap-3">
-        <span className="text-accent">{index}</span>
-        <span className="h-px w-8 bg-line-strong" aria-hidden="true" />
+    <div className="section-head" data-reveal>
+      <p className="eyebrow">
+        <span>{index}</span>
         <span>{label}</span>
       </p>
-      <SplitText as="h2" text={title} className="display text-[clamp(2.5rem,6vw,5.25rem)]" />
-      <span id={`${id}-title`} className="sr-only">
-        {label}
-      </span>
-    </header>
+      <h2 id={id} className="section-title">
+        {title}
+        {count !== undefined && <sup className="count">({String(count).padStart(2, '0')})</sup>}
+      </h2>
+    </div>
   )
 }

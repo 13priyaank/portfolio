@@ -48,7 +48,7 @@ Vercel, Netlify, Cloudflare and GitHub Pages all deploy from a GitHub repo, and 
    git remote add origin https://github.com/<your-username>/portfolio.git
    git push -u origin main
    ```
-   `node_modules` is already in `.gitignore`, so it won't be uploaded. The `dist/` folder will be uploaded unless you add `dist` to `.gitignore`. That's harmless, but the hosts rebuild it anyway.
+   `node_modules` is already in `.gitignore`, so it won't be uploaded. `dist/` is in `.gitignore` too; the hosts build it themselves.
 
 ---
 
@@ -137,7 +137,7 @@ GitHub Pages serves the site from `https://<username>.github.io/<repo>/`, so the
 ## 4. After it's live
 
 1. **Fix the social-share links.** In `index.html`, change `og:image`, `twitter:image` and the JSON-LD `image` from relative paths (`/og.png`) to absolute URLs (`https://your-site.vercel.app/og.png`). Without this, LinkedIn and WhatsApp previews may show no image. Commit and push.
-2. **Refresh the share image.** `public/og.png` is the 1200×630 card used for link previews. It still shows the old photo and the old serif font, so it needs regenerating to match the new look.
+2. **Refresh the share image.** `public/og.png` is the 1200×630 card used for link previews. It still shows the old dark design, so it needs regenerating to match the new look.
 3. **Test the checklist:**
    - Open the URL on your phone and on desktop.
    - Click the résumé download.
@@ -167,5 +167,3 @@ The host rebuilds and publishes automatically within about a minute.
 | Blank page on GitHub Pages | The `base` in `vite.config.ts` doesn't match the repo name. |
 | Images or résumé 404 on GitHub Pages | Root-relative paths ignore `base`. See step 3D.2. |
 | Résumé shows the old version | Hard-refresh (Ctrl+Shift+R). Browsers cache PDFs. |
-| 3D orb missing | The site falls back to a CSS orb if WebGL is unavailable. Try another browser or enable hardware acceleration. |
-| `npm run build` shows a chunk-size warning | It's only a warning. The 3D library is large by nature, and the site still deploys fine. |

@@ -27,7 +27,7 @@ export const about = {
     'I started in the browser, building interactive virtual walkthroughs, and moved steadily down the stack: Node and Next.js API routes, then FastAPI, SQL and AI-backed workflows.',
     'Today I work on a healthcare platform where patients, doctors and care teams upload medical records, get summaries, and ask questions grounded in the documents. I enjoy the unglamorous parts that make software dependable: validation, versioned migrations, Docker-based environments, and tracing a bug from a click to the database.',
     'Outside work I build in Java too: a Spring Boot real-time ad auction service with concurrent bidding, Redis caching and a JUnit/Mockito test suite, packaged with Docker Compose.',
-    'Off the main road, I model in Blender and explore Open3D and Three.js. This page is a small proof of that.',
+    'Off the main road, I model in Blender and explore Open3D and Three.js.',
   ],
   highlights: [
     { label: 'Building for the web since', value: '2024' },
@@ -72,12 +72,30 @@ export const skills: SkillGroup[] = [
   {
     title: 'DevOps & release',
     note: 'Repeatable environments and delivery',
-    items: ['Docker', 'Docker Compose', 'Nginx', 'Git & GitHub', 'Code review', 'Release coordination', 'Workflow automation', 'AWS fundamentals'],
+    items: [
+      'Docker',
+      'Docker Compose',
+      'Nginx',
+      'Git & GitHub',
+      'Code review',
+      'Release coordination',
+      'Workflow automation',
+      'AWS fundamentals',
+    ],
   },
   {
     title: 'Debugging & tools',
     note: 'Root cause, then fix',
-    items: ['Log tracing', 'Defect reproduction', 'Root cause analysis', 'IT support fundamentals', 'Postman', 'Jupyter', 'npm', 'VS Code'],
+    items: [
+      'Log tracing',
+      'Defect reproduction',
+      'Root cause analysis',
+      'IT support fundamentals',
+      'Postman',
+      'Jupyter',
+      'npm',
+      'VS Code',
+    ],
   },
 ]
 
@@ -147,8 +165,7 @@ export const projects: Project[] = [
     index: '02',
     name: 'SmartWalk Studio',
     kind: 'Virtual tour authoring platform',
-    purpose:
-      'A web platform for creating and managing 360° virtual tours, built as part of a 5-member engineering team.',
+    purpose: 'A web platform for creating and managing 360° virtual tours, built as part of a 5-member engineering team.',
     contributions: [
       'Scene management, hotspot linking and metadata handling',
       'JSON configuration and interactive rendering workflows',
@@ -173,8 +190,7 @@ export const projects: Project[] = [
     index: '04',
     name: 'MindDaily',
     kind: 'AI psychologist · Team project',
-    purpose:
-      'An AI-driven journaling system that analyses user-written text and turns it into structured insights.',
+    purpose: 'An AI-driven journaling system that analyses user-written text and turns it into structured insights.',
     contributions: [
       'Text preprocessing, validation and structured formatting in FastAPI',
       'Integration of NLP and LLM pipeline output with application logic',
@@ -186,8 +202,7 @@ export const projects: Project[] = [
     index: '05',
     name: 'AI Knowledge Assistant',
     kind: 'Personal project',
-    purpose:
-      'A document question-answering app that retrieves from uploaded content and answers grounded in it.',
+    purpose: 'A document question-answering app that retrieves from uploaded content and answers grounded in it.',
     contributions: [
       'API endpoints for prompt handling and response generation',
       'Retrieval and contextual Q&A with RAG',
@@ -199,8 +214,7 @@ export const projects: Project[] = [
     index: '06',
     name: '3D Modelling & Visualization',
     kind: 'Exploration',
-    purpose:
-      'Hands-on 3D work: vehicle models in Blender, and programmatic mesh and point-cloud processing for the web.',
+    purpose: 'Hands-on 3D work: vehicle models in Blender, and programmatic mesh and point-cloud processing for the web.',
     contributions: [
       'Created and processed 3D vehicle models in Blender',
       'Mesh processing, point clouds and visualization with Open3D',
@@ -225,9 +239,7 @@ export const education = [
   },
 ]
 
-export const certifications = [
-  { title: 'AWS Academy — Cloud Computing', detail: '' },
-]
+export const certifications = [{ title: 'AWS Academy — Cloud Computing', detail: '' }]
 
 export const achievements = [
   'Built automation that reduced project delivery from about 10 days to 2 days.',
@@ -238,9 +250,8 @@ export const achievements = [
 
 export const nav = [
   { id: 'about', label: 'About' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'experience', label: 'Experience' },
+  { id: 'work', label: 'Work' },
   { id: 'projects', label: 'Projects' },
-  { id: 'education', label: 'Education' },
+  { id: 'stack', label: 'Stack' },
   { id: 'contact', label: 'Contact' },
 ]
