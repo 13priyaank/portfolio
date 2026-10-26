@@ -23,7 +23,8 @@ Step-by-step free hosting guide (Vercel, Netlify, Cloudflare Pages, GitHub Pages
 
 ## How it fits together
 - `src/three/world.ts`: the road curve, desert terrain height, and the time-of-day palette (morning, noon, golden hour, sunset, night).
-- `src/three/car.ts`: the car, built from shaped boxes and cylinders. `signs.ts` paints the highway signs onto canvas textures.
+- `src/three/car.ts`: a low wedge sports coupé, extruded from side profiles. `signs.ts` paints the highway signs and the finish-arch banner onto canvas textures.
+- `src/three/destination.ts`: the end of the trip. After the finish arch the car turns off the road and parks nose-in at a bay reserved for Priyank, next to a flag and a golden trophy.
 - `src/three/RoadTrip.ts`: the scene. Scroll position moves the car along the road; each section has its own camera shot; headlights, stars and sign glow come on at night. Click the open road to honk. Loaded as its own chunk.
 - `src/three/stage.ts`: shared state. `App.tsx` writes scroll progress and where each section starts; the scene writes back speed and odometer for the dashboard.
 - `src/lib/sound.ts`: engine note that follows scroll speed, wind, starter motor, horn, indicator ticks on hover, a chime when you pass an exit. Off until the visitor presses "Start engine" (browsers require a click before audio).

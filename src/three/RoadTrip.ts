@@ -29,9 +29,10 @@ import {
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { makeCar, type Car } from './car'
-import { makeSign, repaint } from './signs'
+import { makeDestination } from './destination'
+import { makeArch, makeSign, repaint } from './signs'
 import { EXITS, stage } from './stage'
-import { newSky, rng, ROAD_HALF, ROAD_LEN, roadX, roadYaw, skyAt, terrainH } from './world'
+import { LOT_Z, lotFrame, newSky, rng, ROAD_HALF, ROAD_LEN, roadX, roadYaw, skyAt, terrainH } from './world'
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const smooth = (t: number) => t * t * (3 - 2 * t)
@@ -43,7 +44,7 @@ const SHOTS = [
   { pos: [-4.5, 2.4, 9.5], look: [0, 1.2, -7] }, // work: low over the left shoulder
   { pos: [0, 9, 16], look: [0, 0.5, -12] }, // projects: high, showing the road ahead
   { pos: [6, 1.6, 6.5], look: [0, 1.2, -6] }, // stack: low, fast-feeling
-  { pos: [-5.5, 2.2, -8.5], look: [0, 1.0, 0] }, // contact: from the front, headlights on
+  { pos: [-3.2, 5.6, 14], look: [2.2, 1.4, -4] }, // contact: high over the shoulder, car, sign, flag and trophy in frame
 ]
 
 const SKY_VERT = /* glsl */ `
@@ -84,14 +85,20 @@ export class RoadTrip {
   private skyMat: ShaderMaterial
   private starMat: ShaderMaterial
   private signs: Group[] = []
+  /** the finish arch and the reserved-bay sign: repainted and lit like the road signs */
+  private extraSigns: Group[] = []
+  private arch!: Group
+  private dest!: ReturnType<typeof makeDestination>
+  private pose = { x: 0, z: 0, yaw: 0 }
   private dust: InstancedMesh
   private dustLife: { p: Vector3; v: Vector3; age: number }[] = []
   private skyState = newSky()
   private raf = 0
   private last = performance.now()
   private start = performance.now()
-  private carP = 0
-  private prevZ = 0
+  /** start wherever the page already is (a reload halfway down shouldn't replay the whole drive) */
+  private carP = stage.progress
+  private prevPos = new Vector3()
   private speed = 0
   private yawPrev = 0
   private honkT = 0
@@ -138,6 +145,9 @@ export class RoadTrip {
     this.buildRoad()
     this.buildScenery()
     this.buildSigns()
+    this.dest = makeDestination()
+    this.scene.add(this.dest.root)
+    this.extraSigns.push(this.dest.sign)
 
     this.car = makeCar()
     this.scene.add(this.car.root)
@@ -157,7 +167,7 @@ export class RoadTrip {
     }
 
     // the sign text uses the display font; repaint once it has loaded
-    document.fonts?.ready.then(() => this.signs.forEach((s) => repaint(s, s.userData.spec)))
+    document.fonts?.ready.then(() => [...this.signs, ...this.extraSigns].forEach((s) => repaint(s, s.userData.spec)))
 
     this.resize()
     window.addEventListener('resize', this.onResize)
@@ -258,11 +268,15 @@ export class RoadTrip {
     const r = rng(42)
     const o = this.tmp.o
     const zMin = -ROAD_LEN - 200
+    const spot = lotFrame().spot
     const place = (minD: number, maxD: number) => {
-      const z = 60 - r() * (60 - zMin)
-      const side = r() < 0.5 ? -1 : 1
-      const x = roadX(z) + side * (minD + r() * (maxD - minD))
-      return { x, z, y: terrainH(x, z) }
+      for (;;) {
+        const z = 60 - r() * (60 - zMin)
+        const side = r() < 0.5 ? -1 : 1
+        const x = roadX(z) + side * (minD + r() * (maxD - minD))
+        // nothing grows in the parking lot
+        if (Math.hypot(x - spot.x, z - spot.z) > 24) return { x, z, y: terrainH(x, z) }
+      }
     }
 
     // saguaro cacti: a trunk and two arms merged into one geometry
@@ -332,7 +346,6 @@ export class RoadTrip {
     const specs = [
       { kind: 'welcome' as const, top: 'MILE 0', main: 'PRIYANK WADIWALA' },
       ...EXITS.slice(0, 4).map((e) => ({ kind: 'exit' as const, ...e })),
-      { kind: 'arrive' as const, ...EXITS[4] },
     ]
     for (const spec of specs) {
       const s = makeSign(spec)
@@ -340,19 +353,26 @@ export class RoadTrip {
       this.signs.push(s)
       this.scene.add(s)
     }
+    // the last stop is a finish arch across the road rather than a roadside sign
+    this.arch = makeArch({ kind: 'finish', top: 'DESTINATION', main: EXITS[4].main })
+    this.extraSigns.push(this.arch)
+    this.scene.add(this.arch)
     this.placeSigns()
   }
 
   /** Put each sign just before the point where its section takes over the screen. */
   placeSigns() {
-    const zs = [-24, ...stage.milestones.slice(0, 4).map((m) => -m * ROAD_LEN - 14), -ROAD_LEN - 22]
+    const zs = [-24, ...stage.milestones.slice(0, 4).map((m) => -m * ROAD_LEN - 14)]
     this.signs.forEach((s, i) => {
       const z = zs[i]
       const yaw = roadYaw(z)
-      const off = i === this.signs.length - 1 ? 0 : 9.5
-      s.position.set(roadX(z) + Math.cos(yaw) * off, 0, z - Math.sin(yaw) * off)
+      s.position.set(roadX(z) + Math.cos(yaw) * 9.5, 0, z - Math.sin(yaw) * 9.5)
       s.rotation.y = yaw
     })
+    // arch just past the point where the contact section begins, but never beyond the lot turn-off
+    const za = Math.max(-stage.milestones[4] * ROAD_LEN - 10, LOT_Z + 22)
+    this.arch.position.set(roadX(za), 0, za)
+    this.arch.rotation.y = roadYaw(za)
   }
 
   private makeStars() {
@@ -428,6 +448,61 @@ export class RoadTrip {
     return this.shot
   }
 
+  /** Right-hand lane position at z. */
+  private lane(z: number) {
+    const yaw = roadYaw(z)
+    return { x: roadX(z) + Math.cos(yaw) * 1.9, z: z - Math.sin(yaw) * 1.9, yaw }
+  }
+
+  /**
+   * Where the car is for a trip fraction p: in the lane until the contact section,
+   * then it carries on to the turn-off and curves into the reserved bay, slowing to a stop.
+   */
+  private carPose(p: number) {
+    const out = this.pose
+    const m = Math.min(stage.milestones[4], 0.985)
+    if (p <= m) {
+      const l = this.lane(-p * ROAD_LEN)
+      out.x = l.x
+      out.z = l.z
+      out.yaw = l.yaw
+      return out
+    }
+    const L = lotFrame()
+    const zTurn = LOT_Z + 12
+    const z0 = -m * ROAD_LEN
+    const straight = Math.max(0, z0 - zTurn)
+    const curve = 24
+    // ease out: arrive at speed, roll to a stop in the bay
+    const t = Math.min(1, (p - m) / (1 - m))
+    const s = (1 - (1 - t) * (1 - t)) * (straight + curve)
+    if (s < straight) {
+      const l = this.lane(z0 - s)
+      out.x = l.x
+      out.z = l.z
+      out.yaw = l.yaw
+      return out
+    }
+    // cubic bezier: lane at the turn-off → on along the road → lined up with the bay → parked
+    const u = (s - straight) / curve
+    const a = this.lane(zTurn)
+    const b = this.lane(LOT_Z + 2)
+    const c = { x: L.road.x + L.right.x * (17 - 8), z: L.road.z + L.right.z * (17 - 8) }
+    const d = L.spot
+    const iu = 1 - u
+    const k0 = iu * iu * iu
+    const k1 = 3 * iu * iu * u
+    const k2 = 3 * iu * u * u
+    const k3 = u * u * u
+    out.x = k0 * a.x + k1 * b.x + k2 * c.x + k3 * d.x
+    out.z = k0 * a.z + k1 * b.z + k2 * c.z + k3 * d.z
+    // heading from the curve's tangent
+    const tx = 3 * iu * iu * (b.x - a.x) + 6 * iu * u * (c.x - b.x) + 3 * u * u * (d.x - c.x)
+    const tz = 3 * iu * iu * (b.z - a.z) + 6 * iu * u * (c.z - b.z) + 3 * u * u * (d.z - c.z)
+    out.yaw = u >= 1 ? L.parkedYaw : Math.atan2(-tx, -tz)
+    return out
+  }
+
   private loop = () => {
     this.raf = requestAnimationFrame(this.loop)
     const now = performance.now()
@@ -438,20 +513,21 @@ export class RoadTrip {
 
     // the car eases toward where the scroll says it should be
     this.carP = lerp(this.carP, stage.progress, ease(this.reduced ? 0.25 : 0.07))
-    const z = -this.carP * ROAD_LEN
-    const dist = Math.abs(z - this.prevZ)
-    this.prevZ = z
+    const pose = this.carPose(this.carP)
+    const car = this.car
+    car.root.position.set(pose.x, 0, pose.z)
+    // first frame: nothing to measure against yet
+    if (!this.camReady) this.prevPos.copy(car.root.position)
+    const dist = car.root.position.distanceTo(this.prevPos)
+    this.prevPos.copy(car.root.position)
     const mps = dt > 0 ? dist / dt : 0
     this.speed = lerp(this.speed, Math.min(240, mps * 2.2), ease(0.08))
     stage.speed = this.speed
     stage.odometer = this.carP * 420
 
-    // place the car in the right-hand lane, facing along the road
-    const car = this.car
-    const yaw = roadYaw(z)
+    const yaw = pose.yaw
     const rx = Math.cos(yaw)
     const rz = -Math.sin(yaw)
-    car.root.position.set(roadX(z) + rx * 1.9, 0, z + rz * 1.9)
     car.root.rotation.y = yaw
     const yawRate = dt > 0 ? (yaw - this.yawPrev) / dt : 0
     this.yawPrev = yaw
@@ -491,10 +567,11 @@ export class RoadTrip {
     car.lights.emissiveIntensity = 0.4 + s.night * 3.2 + flash
     car.tail.emissiveIntensity = 0.5 + s.night * 2.5
     car.beam.intensity = s.night * 180 + flash * 30
-    for (const sign of this.signs) {
+    for (const sign of [...this.signs, ...this.extraSigns]) {
       const face = sign.userData.face
       face.emissiveIntensity = s.night * 0.45
     }
+    this.dest.update(time, s.night)
 
     // camera: section framing, softened, plus a little pointer parallax
     const shot = this.shotAt(this.carP)

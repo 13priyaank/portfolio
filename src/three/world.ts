@@ -21,10 +21,34 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t)
 }
 
+/** The destination: a parking lot just past the end of the drive, on the right of the road. */
+export const LOT_Z = -ROAD_LEN - 8
+export const LOT_OFFSET = 17
+
+/** Frame at the lot: road centre, the right-hand and forward vectors, the parked spot and its yaw. */
+export function lotFrame() {
+  const yaw = roadYaw(LOT_Z)
+  const right = { x: Math.cos(yaw), z: -Math.sin(yaw) }
+  const fwd = { x: -Math.sin(yaw), z: -Math.cos(yaw) }
+  const cx = roadX(LOT_Z)
+  return {
+    road: { x: cx, z: LOT_Z },
+    right,
+    fwd,
+    spot: { x: cx + right.x * LOT_OFFSET, z: LOT_Z + right.z * LOT_OFFSET },
+    // parked nose-in, facing away from the road
+    parkedYaw: yaw - Math.PI / 2,
+    roadYaw: yaw,
+  }
+}
+const LOT = lotFrame()
+
 /** Desert terrain: flat by the road, rolling dunes, then mesas further out. */
 export function terrainH(x: number, z: number) {
   const d = Math.abs(x - roadX(z))
-  const near = smooth(7, 26, d)
+  // keep the parking lot and its surroundings flat
+  const dl = Math.hypot(x - LOT.spot.x, z - LOT.spot.z)
+  const near = smooth(7, 26, d) * smooth(18, 34, dl)
   const dunes =
     Math.sin(x * 0.045 + z * 0.012) * 3.2 + Math.sin(z * 0.029 + x * 0.018) * 2.4 + Math.sin(x * 0.12) * Math.sin(z * 0.1) * 1.2
   const mesa = Math.max(0, d - 55) * 0.42 * (0.55 + 0.45 * Math.sin(z * 0.017 + x * 0.01))
