@@ -6,8 +6,14 @@ import { sound } from '../lib/sound'
 export function Header() {
   const [open, setOpen] = useState(false)
   const [soundOn, setSoundOn] = useState(sound.enabled)
+  const [exit, setExit] = useState(-1)
 
   useEffect(() => sound.subscribe(setSoundOn), [])
+  useEffect(() => {
+    const on = (e: Event) => setExit((e as CustomEvent<number>).detail)
+    window.addEventListener('exit-change', on)
+    return () => window.removeEventListener('exit-change', on)
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('menu-open', open)
@@ -28,24 +34,25 @@ export function Header() {
   const go = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault()
     setOpen(false)
-    // wait a frame so the menu's scroll lock is released first
     requestAnimationFrame(() => scrollToId(id))
   }
 
   return (
     <>
       <header className={`site-header${open ? ' is-open' : ''}`}>
-        <a href="#top" className="brand" onClick={go('top')} aria-label={`${profile.name}, back to top`}>
-          <span className="brand-orb" aria-hidden="true" />
-          <span className="brand-text">
-            Priyank<b>.</b>
+        <a href="#top" className="shield" onClick={go('top')} aria-label={`${profile.name}, back to the start`}>
+          <span className="shield-top" aria-hidden="true">
+            Route
+          </span>
+          <span className="shield-num" aria-hidden="true">
+            PW
           </span>
         </a>
 
         <nav className="nav-desktop" aria-label="Primary">
           {nav.map((n, i) => (
-            <a key={n.id} href={`#${n.id}`} onClick={go(n.id)}>
-              <span className="mono">0{i + 1}</span>
+            <a key={n.id} href={`#${n.id}`} onClick={go(n.id)} className={exit === i ? 'is-here' : undefined}>
+              <span className="exit-no">{i + 1}</span>
               {n.label}
             </a>
           ))}
@@ -57,17 +64,26 @@ export function Header() {
             className={`sound-btn${soundOn ? ' is-on' : ''}`}
             onClick={() => sound.toggle()}
             aria-pressed={soundOn}
+            aria-label={soundOn ? 'Turn sound off' : 'Turn sound on'}
           >
-            <span className="eq" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="sound-label">{soundOn ? 'Sound on' : 'Sound off'}</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+              {soundOn ? (
+                <path
+                  d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path d="M16.5 9.5l5 5M21.5 9.5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              )}
+            </svg>
+            <span className="sound-label">{soundOn ? 'Engine on' : 'Muted'}</span>
           </button>
-          <a href={profile.resume} className="btn btn-glow header-cta" download>
-            Résumé
+          <a href={profile.resume} className="btn btn-ink header-cta" download>
+            Résumé ↓
           </a>
           <button
             type="button"
@@ -82,13 +98,13 @@ export function Header() {
         </div>
       </header>
 
-      {/* a sibling of the header: its backdrop-filter would trap this fixed sheet */}
-      <nav id="mobile-nav" className={`nav-mobile${open ? ' is-open' : ''}`} aria-label="Mobile" hidden={!open}>
+      {/* a sibling of the header so its fixed position isn't trapped by header styles */}
+      <nav id="mobile-nav" className="nav-mobile" aria-label="Mobile" hidden={!open}>
         <ol>
           {nav.map((n, i) => (
-            <li key={n.id} style={{ transitionDelay: `${0.05 + i * 0.05}s` }}>
+            <li key={n.id}>
               <a href={`#${n.id}`} onClick={go(n.id)}>
-                <span className="mono">0{i + 1}</span>
+                <span className="exit-no">EXIT {i + 1}</span>
                 {n.label}
               </a>
             </li>
@@ -96,8 +112,8 @@ export function Header() {
         </ol>
         <div className="nav-mobile-foot">
           <a href={`mailto:${profile.email}`}>{profile.email}</a>
-          <a href={profile.resume} className="btn btn-glow" download>
-            Download résumé
+          <a href={profile.resume} className="btn btn-ink" download>
+            Download résumé ↓
           </a>
         </div>
       </nav>

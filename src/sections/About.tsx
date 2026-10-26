@@ -5,66 +5,75 @@ export function About() {
   const [lead, ...rest] = about.paragraphs
 
   return (
-    <section id="about" className="section side-right" aria-labelledby="about-title">
-      <div className="col">
-        <SectionHead index="01" label="About" title="From pixels down to Postgres." accent="Postgres" id="about-title" />
-
-        <div data-reveal-group>
-          <p className="lead" data-reveal>
-            {lead}
+    <section id="about" className="leg" aria-labelledby="about-title">
+      <article className="card postcard" data-card="-1">
+        <span className="stamp" aria-hidden="true">
+          <span>01</span>
+          <small>About</small>
+        </span>
+        <SectionHead exit="EXIT 01" label="About" title="From pixels down to Postgres." italic="Postgres" id="about-title" />
+        <p className="lead">{lead}</p>
+        {rest.map((p) => (
+          <p className="body" key={p.slice(0, 20)}>
+            {p}
           </p>
-          {rest.map((p) => (
-            <p className="body" key={p.slice(0, 20)} data-reveal>
-              {p}
-            </p>
-          ))}
-        </div>
+        ))}
 
-        <div className="stat-row" data-reveal-group>
-          <div className="glass stat" data-reveal data-sfx>
-            <span className="stat-num">
+        <div className="stickers-row">
+          <div className="badge badge-teal" data-pop="0" data-sfx>
+            <strong>
               <span data-count="2024" data-from="2000">
                 2024
               </span>
-            </span>
-            <span className="mono">Building for the web since</span>
+            </strong>
+            <span>building for the web since</span>
           </div>
-          <div className="glass stat" data-reveal data-sfx>
-            <span className="stat-num">
+          <div className="badge badge-terra" data-pop="0.1" data-sfx>
+            <strong>
               10→
-              <span className="grad" data-count="2" data-from="10">
+              <span data-count="2" data-from="10">
                 2
               </span>
-            </span>
-            <span className="mono">Days to deliver, after automation</span>
+            </strong>
+            <span>days to deliver after automation</span>
           </div>
-          <div className="glass stat" data-reveal data-sfx>
-            <span className="stat-num">
+          <div className="badge badge-mustard" data-pop="0.2" data-sfx>
+            <strong>
               <span data-count="6" data-from="0">
                 6
               </span>
-            </span>
-            <span className="mono">Projects across health, AI and 3D</span>
+            </strong>
+            <span>projects across health, AI & 3D</span>
           </div>
         </div>
+      </article>
 
-        <div className="edu" data-reveal-group>
+      <article className="card card-small" data-card="1.2" aria-label="Education and certification">
+        <h3 className="card-label">Rest stops along the way</h3>
+        <ul className="stops">
           {education.map((e) => (
-            <div className="glass edu-card" key={e.title} data-reveal data-sfx>
-              <span className="mono">{e.period}</span>
-              <strong>{e.title}</strong>
-              <span>{e.place}</span>
-              <span className="pill">{e.score}</span>
-            </div>
+            <li key={e.title}>
+              <span className="stop-dot" aria-hidden="true" />
+              <div>
+                <strong>{e.title}</strong>
+                <span>
+                  {e.place} · {e.period}
+                </span>
+              </div>
+              <span className="score">{e.score}</span>
+            </li>
           ))}
           {certifications.map((c) => (
-            <div className="glass edu-card" key={c.title} data-reveal data-sfx>
-              <span className="mono">Certification</span>
-              <strong>{c.title}</strong>
-            </div>
+            <li key={c.title}>
+              <span className="stop-dot" aria-hidden="true" />
+              <div>
+                <strong>{c.title}</strong>
+                <span>Certification</span>
+              </div>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </article>
     </section>
   )
 }

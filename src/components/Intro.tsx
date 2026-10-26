@@ -1,76 +1,77 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from '../lib/motion'
-import { sound } from '../lib/sound'
 
-type Props = { ready: boolean; onEnter: (withSound: boolean) => void; onDone: () => void }
+type Props = { ready: boolean; onStart: (withSound: boolean) => void; onDone: () => void }
 
 /**
- * Loading gate. Counts up while the particle scene boots, then asks how to
- * enter. The click doubles as the user gesture browsers need before audio.
+ * The ignition screen. A fuel gauge fills while the 3D road loads, then the
+ * visitor starts the engine. That click is also the gesture browsers need for audio.
  */
-export function Intro({ ready, onEnter, onDone }: Props) {
+export function Intro({ ready, onStart, onDone }: Props) {
   const root = useRef<HTMLDivElement>(null)
-  const [pct, setPct] = useState(0)
+  const [fuel, setFuel] = useState(0)
   const [leaving, setLeaving] = useState(false)
-  const done = pct >= 100
+  const full = fuel >= 100
 
-  // ease toward 90 on our own, finish once the scene says it's ready
   useEffect(() => {
     const id = window.setInterval(() => {
-      setPct((p) => {
-        const cap = ready ? 100 : 90
-        return p >= cap ? cap : Math.min(cap, p + Math.max(1, Math.round((cap - p) * (ready ? 0.18 : 0.06))))
+      setFuel((f) => {
+        const cap = ready ? 100 : 88
+        return f >= cap ? cap : Math.min(cap, f + Math.max(1, Math.round((cap - f) * (ready ? 0.2 : 0.07))))
       })
     }, 40)
     return () => clearInterval(id)
   }, [ready])
 
   useEffect(() => {
-    if (done) root.current?.querySelector<HTMLButtonElement>('.intro-btn')?.focus({ preventScroll: true })
-  }, [done])
+    if (full) root.current?.querySelector<HTMLButtonElement>('.ignition')?.focus({ preventScroll: true })
+  }, [full])
 
-  const enter = (withSound: boolean) => {
+  const start = (withSound: boolean) => {
     if (leaving) return
     setLeaving(true)
-    onEnter(withSound)
-    if (!withSound) sound.setEnabled(false)
+    onStart(withSound)
     gsap
       .timeline({ onComplete: onDone })
-      .to('.intro-inner', { y: -30, opacity: 0, duration: 0.6, ease: 'power2.in' })
-      .to(root.current, { clipPath: 'inset(0 0 100% 0)', duration: 1.1, ease: 'expo.inOut' }, '-=0.2')
+      .to('.ignition', { scale: 0.9, duration: 0.12, yoyo: true, repeat: 1 })
+      .to('.intro-card', { y: 40, rotation: -6, opacity: 0, duration: 0.6, ease: 'power2.in' }, '+=0.15')
+      .to(root.current, { yPercent: -100, duration: 0.9, ease: 'expo.inOut' }, '-=0.2')
   }
 
   return (
-    <div ref={root} className="intro" role="dialog" aria-modal="true" aria-label="Welcome">
-      <div className="intro-inner">
-        <p className="mono intro-kicker">Priyank Wadiwala · Portfolio 2026</p>
+    <div ref={root} className="intro" role="dialog" aria-modal="true" aria-label="Start the road trip">
+      <div className="intro-card">
+        <p className="intro-ticket">Admit one · Road trip through a portfolio</p>
+        <h1 className="intro-title">
+          Ready for a <em>drive?</em>
+        </h1>
+        <p className="intro-sub">Scroll to drive the car through my work. Click the open road to honk.</p>
 
-        <div className="intro-count" aria-hidden="true">
-          {String(pct).padStart(3, '0')}
-          <span>%</span>
+        <div className="fuel" aria-hidden="true">
+          <span className="fuel-e">E</span>
+          <span className="fuel-track">
+            <span className="fuel-fill" style={{ transform: `scaleX(${fuel / 100})` }} />
+          </span>
+          <span className="fuel-f">F</span>
         </div>
-        <div className="intro-bar" aria-hidden="true">
-          <span style={{ transform: `scaleX(${pct / 100})` }} />
-        </div>
-        <p className="mono intro-status" role="status">
-          {done ? 'Universe assembled.' : 'Assembling 20,000 particles…'}
+        <p className="intro-status" role="status">
+          {full ? 'Tank’s full. Let’s go.' : `Fuelling up… ${fuel}%`}
         </p>
 
-        <div className={`intro-actions${done ? ' is-on' : ''}`}>
-          <button type="button" className="intro-btn" disabled={!done} onClick={() => enter(true)}>
-            <span className="eq" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
+        <div className={`intro-actions${full ? ' is-on' : ''}`}>
+          <button type="button" className="ignition" disabled={!full} onClick={() => start(true)}>
+            <span className="ign-ring" aria-hidden="true" />
+            <span className="ign-text">
+              Start
+              <br />
+              engine
             </span>
-            Enter with sound
+            <span className="sr-only">with sound</span>
           </button>
-          <button type="button" className="intro-btn ghost" disabled={!done} onClick={() => enter(false)}>
-            Enter silently
+          <button type="button" className="ride-silent" disabled={!full} onClick={() => start(false)}>
+            Ride silently →
           </button>
         </div>
-        <p className="intro-hint">Best with headphones. Move your mouse and click anywhere once inside.</p>
       </div>
     </div>
   )

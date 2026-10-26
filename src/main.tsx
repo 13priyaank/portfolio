@@ -1,8 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '@fontsource-variable/unbounded'
+import '@fontsource-variable/fraunces/full'
+import '@fontsource-variable/fraunces/full-italic'
+import '@fontsource-variable/big-shoulders-display'
 import '@fontsource-variable/geist'
-import '@fontsource-variable/geist-mono'
 import './styles.css'
 import App from './App'
 

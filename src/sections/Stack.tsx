@@ -1,28 +1,31 @@
 import { skills } from '../data/profile'
 import { SectionHead } from '../components/SectionHead'
 
+const COLORS = ['teal', 'terra', 'mustard', 'paper']
+
 export function Stack() {
   return (
-    <section id="stack" className="section side-right" aria-labelledby="stack-title">
-      <div className="col">
-        <SectionHead index="04" label="Stack" title="The toolbox in orbit." accent="orbit" id="stack-title" />
+    <section id="stack" className="leg leg-wide" aria-labelledby="stack-title">
+      <div className="card card-head" data-card="1">
+        <SectionHead exit="EXIT 04" label="Toolbox" title="What’s packed in the boot." italic="boot." id="stack-title" />
+      </div>
 
-        <div className="stack-grid" data-reveal-group>
-          {skills.map((g, i) => (
-            <div key={g.title} className="glass stack-card" data-reveal data-sfx>
-              <div className="stack-head">
-                <span className="mono">{String(i + 1).padStart(2, '0')}</span>
-                <h3>{g.title}</h3>
-              </div>
-              <p className="mono stack-note">{g.note}</p>
-              <ul className="chips">
+      <div className="tags">
+        {skills.map((g, i) => (
+          // outline + shadow live on the article; the clipped tag shape is the inner body
+          <article key={g.title} className={`tag tag-${COLORS[i % COLORS.length]}`} data-card={i % 2 ? '1.5' : '-1.5'} data-sfx>
+            <div className="tag-body">
+              <span className="tag-hole" aria-hidden="true" />
+              <h3>{g.title}</h3>
+              <p className="tag-note">{g.note}</p>
+              <ul>
                 {g.items.map((s) => (
                   <li key={s}>{s}</li>
                 ))}
               </ul>
             </div>
-          ))}
-        </div>
+          </article>
+        ))}
       </div>
     </section>
   )

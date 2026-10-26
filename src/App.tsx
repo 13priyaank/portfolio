@@ -1,261 +1,223 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Intro } from './components/Intro'
 import { Header } from './components/Header'
-import { FormHud } from './components/FormHud'
+import { Dashboard } from './components/Dashboard'
 import { Hero } from './sections/Hero'
 import { About } from './sections/About'
 import { Work } from './sections/Work'
 import { Projects } from './sections/Projects'
 import { Stack } from './sections/Stack'
 import { Contact } from './sections/Contact'
-import { gsap, prefersReducedMotion, ScrollTrigger, startSmoothScroll, getLenis } from './lib/motion'
+import { getLenis, gsap, prefersReducedMotion, ScrollTrigger, startSmoothScroll } from './lib/motion'
 import { sound } from './lib/sound'
 import { stage } from './three/stage'
-import type { ParticleField } from './three/ParticleField'
+import type { RoadTrip } from './three/RoadTrip'
 
-/** Sections in order; each one owns a particle form (see three/shapes.ts). */
-const SECTIONS = ['top', 'about', 'work', 'projects', 'stack', 'contact']
+/** Sections after the hero, in driving order; each has an exit sign on the road. */
+const STOPS = ['about', 'work', 'projects', 'stack', 'contact']
 
 export default function App() {
   const canvas = useRef<HTMLCanvasElement>(null)
-  const main = useRef<HTMLElement>(null)
+  const trip = useRef<RoadTrip | null>(null)
   const [reduced] = useState(prefersReducedMotion)
   const [scene, setScene] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const [entered, setEntered] = useState(false)
+  const [started, setStarted] = useState(false)
   const [introGone, setIntroGone] = useState(false)
 
-  // WebGL scene: its own chunk, started as soon as the shell is up
+  // WebGL road trip: its own chunk, booted while the intro is up
   useEffect(() => {
-    let field: ParticleField | undefined
     let cancelled = false
-    import('./three/ParticleField')
-      .then(({ ParticleField }) => {
+    import('./three/RoadTrip')
+      .then(({ RoadTrip }) => {
         if (cancelled || !canvas.current) return
-        field = new ParticleField(canvas.current, { reduced })
+        trip.current = new RoadTrip(canvas.current, { reduced })
         setScene('ready')
       })
       .catch(() => setScene('failed'))
     return () => {
       cancelled = true
-      field?.dispose()
+      trip.current?.dispose()
+      trip.current = null
     }
   }, [reduced])
 
-  // pointer drives repulsion + tilt; a click anywhere sends a shockwave
+  // pointer parallax, horn on clicking the open road, indicator ticks on hover
   useEffect(() => {
     const move = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return
       stage.pointer.x = (e.clientX / innerWidth) * 2 - 1
       stage.pointer.y = -(e.clientY / innerHeight) * 2 + 1
-      stage.pointer.active = true
     }
-    const leave = () => (stage.pointer.active = false)
     const down = (e: PointerEvent) => {
       const t = e.target as HTMLElement
-      if (t.closest('a, button, summary')) sound.click()
-      else if (!t.closest('.intro')) {
-        stage.pulse()
-        sound.click()
-      }
+      // only the scenery honks; cards, links and the dashboard don't
+      if (t.closest('a, button, summary, .card, .site-header, .dash, .intro, .nav-mobile')) return
+      stage.honk()
+      sound.honk()
     }
     let lastHover: Element | null = null
     const over = (e: MouseEvent) => {
       const el = (e.target as HTMLElement).closest('a, button, [data-sfx]')
-      if (el && el !== lastHover) sound.hover()
+      if (el && el !== lastHover) sound.tick()
       lastHover = el
     }
     window.addEventListener('pointermove', move, { passive: true })
-    document.addEventListener('pointerleave', leave)
     window.addEventListener('pointerdown', down)
     document.addEventListener('mouseover', over)
     return () => {
       window.removeEventListener('pointermove', move)
-      document.removeEventListener('pointerleave', leave)
       window.removeEventListener('pointerdown', down)
       document.removeEventListener('mouseover', over)
     }
   }, [])
 
-  // smooth scroll, locked until the intro is dismissed
   useEffect(() => {
     if (reduced) return
     return startSmoothScroll()
   }, [reduced])
 
   useEffect(() => {
-    document.documentElement.classList.toggle('is-locked', !entered)
-    if (entered) getLenis()?.start()
+    document.documentElement.classList.toggle('is-locked', !started)
+    if (started) getLenis()?.start()
     else getLenis()?.stop()
-  }, [entered])
+  }, [started])
 
-  // scroll choreography
+  // scroll → car position, exits, engine note, and the card choreography
   useLayoutEffect(() => {
-    if (!main.current) return
     const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia()
-
-      // projects: pinned horizontal gallery on wide screens
-      mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', () => {
-        const track = document.querySelector<HTMLElement>('.p-track')
-        const wrap = document.querySelector<HTMLElement>('.p-pin')
-        if (!track || !wrap) return
-        const dist = () => track.scrollWidth - window.innerWidth + 64
-        gsap.to(track, {
-          x: () => -dist(),
-          ease: 'none',
-          scrollTrigger: {
-            trigger: wrap,
-            start: 'top top',
-            end: () => `+=${dist()}`,
-            pin: true,
-            scrub: 0.8,
-            invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              const bar = document.querySelector<HTMLElement>('.p-progress > span')
-              if (bar) bar.style.transform = `scaleX(${self.progress})`
-            },
-          },
-        })
+      ScrollTrigger.create({
+        start: 0,
+        end: 'max',
+        onUpdate: (self) => (stage.progress = self.progress),
       })
 
-      // one trigger per section boundary; their summed progress is the particle form
-      const morphs = SECTIONS.slice(1).map((id) => ScrollTrigger.create({ trigger: `#${id}`, start: 'top 85%', end: 'top 15%' }))
-      let lastForm = 0
+      // where each section begins along the road, so signs line up with the copy
+      const measure = () => {
+        const max = ScrollTrigger.maxScroll(window) || 1
+        stage.milestones = STOPS.map((id) => {
+          const el = document.getElementById(id)
+          if (!el) return 1
+          const top = el.getBoundingClientRect().top + window.scrollY
+          return Math.min(1, Math.max(0.02, (top - innerHeight * 0.55) / max))
+        })
+        trip.current?.placeSigns()
+      }
+      ScrollTrigger.addEventListener('refresh', measure)
+      measure()
+
+      let lastExit = -1
       const tick = () => {
-        const t = morphs.reduce((sum, m) => sum + m.progress, 0)
-        stage.target = t
-        const form = Math.round(t)
-        if (form !== lastForm) {
-          sound.whoosh(form > lastForm)
-          sound.section(form)
-          window.dispatchEvent(new CustomEvent('form-change', { detail: form }))
-          lastForm = form
+        sound.setSpeed(stage.speed)
+        const passed = stage.milestones.filter((m) => stage.progress >= m).length - 1
+        if (passed !== lastExit) {
+          if (lastExit !== -2) sound.chime(passed > lastExit)
+          lastExit = passed
+          window.dispatchEvent(new CustomEvent('exit-change', { detail: passed }))
         }
       }
+      lastExit = -2
       gsap.ticker.add(tick)
 
-      if (reduced) return () => gsap.ticker.remove(tick)
-
-      // headings: words rise out of a mask
-      gsap.utils.toArray<HTMLElement>('[data-split]').forEach((h) => {
-        gsap.from(h.querySelectorAll('.w > span'), {
-          yPercent: 115,
-          rotate: 4,
-          duration: 1.1,
-          stagger: 0.06,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: h, start: 'top 85%', once: true },
+      if (!reduced) {
+        // cards land on the table like postcards being dealt
+        gsap.utils.toArray<HTMLElement>('[data-card]').forEach((el) => {
+          const tilt = Number(el.dataset.card) || 0
+          gsap.set(el, { rotation: tilt })
+          gsap.from(el, {
+            y: 110,
+            opacity: 0,
+            rotation: tilt + (tilt >= 0 ? 7 : -7),
+            duration: 1.1,
+            ease: 'back.out(1.4)',
+            scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+          })
         })
-      })
-
-      // generic reveal, staggered within a group
-      gsap.utils.toArray<HTMLElement>('[data-reveal-group]').forEach((g) => {
-        gsap.from(g.querySelectorAll('[data-reveal]'), {
-          y: 40,
+        gsap.utils.toArray<HTMLElement>('[data-pop]').forEach((el) => {
+          gsap.from(el, {
+            scale: 0,
+            rotation: -40,
+            duration: 0.8,
+            ease: 'back.out(2.2)',
+            delay: Number(el.dataset.pop) || 0,
+            scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+          })
+        })
+        gsap.utils.toArray<HTMLElement>('[data-split]').forEach((h) => {
+          gsap.from(h.querySelectorAll('.w > span'), {
+            yPercent: 110,
+            duration: 1,
+            stagger: 0.05,
+            ease: 'expo.out',
+            scrollTrigger: { trigger: h, start: 'top 90%', once: true },
+          })
+        })
+        gsap.utils.toArray<HTMLElement>('[data-bar]').forEach((b) => {
+          gsap.from(b, {
+            scaleX: 0,
+            duration: 1.6,
+            ease: 'expo.out',
+            scrollTrigger: { trigger: b, start: 'top 92%', once: true },
+          })
+        })
+        gsap.utils.toArray<HTMLElement>('[data-count]').forEach((el) => {
+          const obj = { v: Number(el.dataset.from ?? 0) }
+          gsap.to(obj, {
+            v: Number(el.dataset.count),
+            duration: 1.8,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+            onUpdate: () => (el.textContent = String(Math.round(obj.v))),
+          })
+        })
+        // hero copy drifts off as the car pulls away
+        gsap.to('.hero-copy, .scroll-hint', {
+          y: -80,
           opacity: 0,
-          duration: 1,
-          stagger: 0.08,
-          ease: 'power3.out',
-          scrollTrigger: { trigger: g, start: 'top 82%', once: true },
+          ease: 'none',
+          scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom 30%', scrub: true },
         })
-      })
+      }
 
-      // experience: glowing spine draws as you scroll
-      gsap.fromTo(
-        '.spine-fill',
-        { scaleY: 0 },
-        { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.jobs', start: 'top 65%', end: 'bottom 60%', scrub: 0.5 } },
-      )
-
-      // metric bars + counters fill on view
-      gsap.utils.toArray<HTMLElement>('[data-bar]').forEach((b) => {
-        gsap.from(b, {
-          scaleX: 0,
-          duration: 1.6,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: b, start: 'top 90%', once: true },
-        })
-      })
-      gsap.utils.toArray<HTMLElement>('[data-count]').forEach((el) => {
-        const end = Number(el.dataset.count)
-        const obj = { v: el.dataset.from ? Number(el.dataset.from) : 0 }
-        gsap.to(obj, {
-          v: end,
-          duration: 2,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: el, start: 'top 90%', once: true },
-          onUpdate: () => (el.textContent = String(Math.round(obj.v))),
-        })
-      })
-
-      // hero drifts up and fades as you leave it
-      gsap.to('.hero-inner', {
-        yPercent: -18,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom 20%', scrub: true },
-      })
-
-      // big contact line scales in
-      gsap.from('.contact-title', {
-        scale: 0.85,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: '#contact', start: 'top 90%', end: 'top 30%', scrub: true },
-      })
-
-      // top progress bar
-      gsap.fromTo(
-        '.scroll-progress > span',
-        { scaleX: 0 },
-        { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } },
-      )
-
-      return () => gsap.ticker.remove(tick)
+      return () => {
+        gsap.ticker.remove(tick)
+        ScrollTrigger.removeEventListener('refresh', measure)
+      }
     })
-
-    // fonts change layout: recompute trigger positions once they land
     document.fonts?.ready.then(() => ScrollTrigger.refresh())
     return () => ctx.revert()
   }, [reduced])
 
-  // hero entrance once the intro is gone
+  // hero entrance once the engine is started
   useLayoutEffect(() => {
-    if (!entered) return
+    if (!started) return
     ScrollTrigger.refresh()
     if (reduced) return
-    const tl = gsap.timeline({ delay: 0.15 })
-    tl.from('.hero .ch', { yPercent: 120, opacity: 0, rotate: 8, duration: 1.2, stagger: 0.035, ease: 'expo.out' })
-      .from('.hero [data-hero]', { y: 30, opacity: 0, duration: 1, stagger: 0.1, ease: 'power3.out' }, '-=0.8')
-      .from('.site-header, .form-hud', { y: -20, opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=0.9')
+    const tl = gsap.timeline({ delay: 0.2 })
+    tl.from('.hero .w > span', { yPercent: 110, duration: 1.1, stagger: 0.06, ease: 'expo.out' })
+      .from('.hero [data-hero]', { y: 24, opacity: 0, duration: 0.8, stagger: 0.08, ease: 'power3.out' }, '-=0.7')
+      .from('.hero [data-sticker]', { scale: 0, rotation: -30, duration: 0.7, stagger: 0.08, ease: 'back.out(2)' }, '-=0.6')
+      .from('.site-header, .dash', { y: (i) => (i ? 40 : -40), opacity: 0, duration: 0.8, ease: 'power3.out' }, '-=0.8')
     return () => {
       tl.kill()
     }
-  }, [entered, reduced])
+  }, [started, reduced])
 
-  const onEnter = useCallback((withSound: boolean) => {
+  const onStart = useCallback((withSound: boolean) => {
     if (withSound) {
       sound.setEnabled(true)
-      sound.chime()
+      sound.ignition()
     }
-    stage.intro = 1
-    window.setTimeout(() => stage.pulse(), 700)
-    setEntered(true)
+    window.setTimeout(() => stage.honk(), withSound ? 900 : 200)
+    setStarted(true)
   }, [])
 
   return (
     <>
       <canvas ref={canvas} className="webgl" aria-hidden="true" />
       {scene === 'failed' && <div className="webgl-fallback" aria-hidden="true" />}
-      <div className="vignette" aria-hidden="true" />
-      <div className="scroll-progress" aria-hidden="true">
-        <span />
-      </div>
 
       <Header />
-      <FormHud />
-
-      <main ref={main} id="main">
+      <main id="main">
         <Hero />
         <About />
         <Work />
@@ -263,8 +225,9 @@ export default function App() {
         <Stack />
         <Contact />
       </main>
+      <Dashboard />
 
-      {!introGone && <Intro ready={scene !== 'loading'} onEnter={onEnter} onDone={() => setIntroGone(true)} />}
+      {!introGone && <Intro ready={scene !== 'loading'} onStart={onStart} onDone={() => setIntroGone(true)} />}
     </>
   )
 }

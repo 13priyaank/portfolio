@@ -1,14 +1,15 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { profile } from '../data/profile'
 import { scrollToId } from '../lib/motion'
+import { sound } from '../lib/sound'
 import { stage } from '../three/stage'
 
 export function Contact() {
   const [copied, setCopied] = useState(false)
-  const magnet = useRef<HTMLButtonElement>(null)
 
   const copy = async () => {
-    stage.pulse()
+    stage.honk()
+    sound.honk()
     try {
       await navigator.clipboard.writeText(profile.email)
       setCopied(true)
@@ -18,67 +19,65 @@ export function Contact() {
     }
   }
 
-  // the button leans toward the pointer
-  const pull = (e: React.PointerEvent) => {
-    const el = magnet.current
-    if (!el || e.pointerType !== 'mouse') return
-    const r = el.getBoundingClientRect()
-    el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`
-  }
-  const release = () => magnet.current && (magnet.current.style.transform = '')
-
   return (
-    <section id="contact" className="contact" aria-labelledby="contact-title">
-      <p className="label mono">
-        <span className="label-index">05</span>
-        <span className="label-line" aria-hidden="true" />
-        Contact
-      </p>
-      <h2 id="contact-title" className="contact-title">
-        Let’s build
-        <br />
-        <span className="grad">something real.</span>
-      </h2>
-      <p className="contact-sub">Have a project, a role or just a question? The fastest reply is by email.</p>
-
-      <div className="contact-cta" onPointerMove={pull} onPointerLeave={release}>
-        <a className="contact-email" href={`mailto:${profile.email}`}>
-          {profile.email}
-        </a>
-        <button ref={magnet} type="button" className="btn btn-glow" onClick={copy}>
-          {copied ? 'Copied ✓' : 'Copy email'}
-        </button>
-        <span className="sr-only" role="status" aria-live="polite">
-          {copied ? 'Email address copied to clipboard' : ''}
+    <section id="contact" className="leg leg-end" aria-labelledby="contact-title">
+      <article className="card postcard contact-card" data-card="-0.8">
+        <span className="stamp stamp-terra" aria-hidden="true">
+          <span>✶</span>
+          <small>Arrived</small>
         </span>
-      </div>
+        <p className="exit-sign exit-blue" data-pop>
+          <span className="exit-tab">Last stop</span>
+          <span className="exit-main">Say hello</span>
+        </p>
+        <h2 id="contact-title" className="contact-title">
+          You made it to the end of the road. <em>Let’s plan the next trip.</em>
+        </h2>
+        <p className="body">Have a project, a role or just a question? The fastest reply is by email.</p>
 
-      <ul className="socials">
-        <li>
-          <a href={profile.linkedin} target="_blank" rel="noreferrer" className="glass">
-            LinkedIn <span aria-hidden="true">↗</span>
+        <div className="contact-cta">
+          <a className="contact-email" href={`mailto:${profile.email}`}>
+            {profile.email}
           </a>
-        </li>
-        <li>
-          <a href={profile.github} target="_blank" rel="noreferrer" className="glass">
-            GitHub <span aria-hidden="true">↗</span>
-          </a>
-        </li>
-        <li>
-          <a href={profile.phoneHref} className="glass">
-            {profile.phone}
-          </a>
-        </li>
-        <li>
-          <a href={profile.resume} download className="glass">
-            Résumé <span aria-hidden="true">↓</span>
-          </a>
-        </li>
-      </ul>
+          <button type="button" className="btn btn-ink" onClick={copy}>
+            {copied ? 'Copied ✓ (beep beep)' : 'Copy email'}
+          </button>
+          <span className="sr-only" role="status" aria-live="polite">
+            {copied ? 'Email address copied to clipboard' : ''}
+          </span>
+        </div>
 
-      <footer className="footer mono">
+        <ul className="contact-links">
+          <li>
+            <a href={profile.linkedin} target="_blank" rel="noreferrer">
+              <span>LinkedIn</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a href={profile.github} target="_blank" rel="noreferrer">
+              <span>GitHub</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </li>
+          <li>
+            <a href={profile.phoneHref}>
+              <span>{profile.phone}</span>
+              <span aria-hidden="true">☏</span>
+            </a>
+          </li>
+          <li>
+            <a href={profile.resume} download>
+              <span>Résumé (PDF)</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+          </li>
+        </ul>
+      </article>
+
+      <footer className="footer">
         <span>© 2026 {profile.name}</span>
-        <span>Built with Three.js, GSAP and Web Audio</span>
+        <span>Car, road and sounds made in code with three.js, GSAP and Web Audio</span>
         <a
           href="#top"
           onClick={(e) => {
@@ -86,7 +85,7 @@ export function Contact() {
             scrollToId('top')
           }}
         >
-          Back to top ↑
+          Drive back to the start ↑
         </a>
       </footer>
     </section>

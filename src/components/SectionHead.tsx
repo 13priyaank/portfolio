@@ -1,21 +1,23 @@
 import { Fragment } from 'react'
 
-type Props = { index: string; label: string; title: string; id: string; accent?: string }
+type Props = { exit: string; label: string; title: string; italic?: string; id: string }
 
-/** Numbered label, then a title whose words rise out of a mask on scroll. */
-export function SectionHead({ index, label, title, id, accent }: Props) {
+/** A small highway exit sign, then a serif title whose words rise into place. */
+export function SectionHead({ exit, label, title, italic, id }: Props) {
   return (
     <div className="section-head">
-      <p className="label mono">
-        <span className="label-index">{index}</span>
-        <span className="label-line" aria-hidden="true" />
-        {label}
+      <p className="exit-sign" data-pop>
+        <span className="exit-tab">{exit}</span>
+        <span className="exit-main">{label}</span>
+        <span className="exit-arrow" aria-hidden="true">
+          ↗
+        </span>
       </p>
       <h2 id={id} className="section-title" data-split aria-label={title}>
         {title.split(' ').map((w, i) => (
-          // the space must sit outside the inline-block mask or it collapses
+          // the space sits outside the inline-block mask or it collapses
           <Fragment key={i}>
-            <span className={`w${accent && w.includes(accent) ? ' grad' : ''}`} aria-hidden="true">
+            <span className={`w${italic && w.includes(italic) ? ' it' : ''}`} aria-hidden="true">
               <span>{w}</span>
             </span>{' '}
           </Fragment>

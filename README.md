@@ -1,6 +1,6 @@
 # Priyank Wadiwala — Portfolio
 
-React + TypeScript + Vite. A raw three.js particle field (20k points, 9k on phones) morphs into a new shape for each section, GSAP + ScrollTrigger drive the scroll choreography with Lenis smooth scroll, and every sound is synthesised live with the Web Audio API (no audio files).
+React + TypeScript + Vite. The portfolio is a road trip: a low-poly car (modelled in code with three.js) drives a winding desert road as you scroll, passing an exit sign for each section while the sky goes from morning to night. GSAP + ScrollTrigger + Lenis handle the scroll choreography, and every sound (engine, wind, horn, chimes) is synthesised live with the Web Audio API.
 
 ```bash
 npm install
@@ -22,9 +22,10 @@ Step-by-step free hosting guide (Vercel, Netlify, Cloudflare Pages, GitHub Pages
 - No project has a public repo or live demo link, so none are shown. Add a `links` field and render it in `src/sections/Projects.tsx` when you have them.
 
 ## How it fits together
-- `src/three/shapes.ts`: the six point clouds (sphere, DNA helix, lattice, torus knot, ringed planet, galaxy), one per section.
-- `src/three/ParticleField.ts`: the WebGL scene. A vertex shader blends between shapes with a staggered burst, pushes particles away from the pointer, and plays a shockwave on click. Loaded as its own chunk.
-- `src/three/stage.ts`: shared state. `App.tsx` writes the scroll position (summed ScrollTrigger progress) and pointer into it; the scene reads it every frame.
-- `src/lib/sound.ts`: ambient pad that changes chord per section, whooshes on morphs, ticks on hover, plucks on click. Off until the visitor chooses "Enter with sound" (browsers require a click before audio).
-- Projects are a pinned horizontal gallery on screens 900px and wider; a normal vertical list on phones.
-- `prefers-reduced-motion`: no smooth scroll, no pinning, no text animations; the particles still change shape but without drifting.
+- `src/three/world.ts`: the road curve, desert terrain height, and the time-of-day palette (morning, noon, golden hour, sunset, night).
+- `src/three/car.ts`: the car, built from shaped boxes and cylinders. `signs.ts` paints the highway signs onto canvas textures.
+- `src/three/RoadTrip.ts`: the scene. Scroll position moves the car along the road; each section has its own camera shot; headlights, stars and sign glow come on at night. Click the open road to honk. Loaded as its own chunk.
+- `src/three/stage.ts`: shared state. `App.tsx` writes scroll progress and where each section starts; the scene writes back speed and odometer for the dashboard.
+- `src/lib/sound.ts`: engine note that follows scroll speed, wind, starter motor, horn, indicator ticks on hover, a chime when you pass an exit. Off until the visitor presses "Start engine" (browsers require a click before audio).
+- `src/components/Dashboard.tsx`: speedometer, odometer, next exit and trip strip, updated straight from the animation frame.
+- `prefers-reduced-motion`: no smooth scroll and no card animations; the car still follows the scroll.
